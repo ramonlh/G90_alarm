@@ -1,0 +1,26 @@
+Ventana local para ver el estado de la alarma G90.
+
+Qué muestra
+- Estado general: desarmado / armado parcial / armado total
+- Estado de conexión: recibiendo / sin tráfico reciente / desconectado
+- Último SOS
+- Zonas cableadas 1 a 4
+- Log de eventos recientes
+
+Qué necesita
+- Que el listener siga generando el fichero JSONL, normalmente:
+  ~/alarma/g90_eventos_base.jsonl
+
+Uso
+1) Activa el entorno:
+   source ~/g90env/bin/activate
+
+2) Arranca la ventana:
+   python3 ~/alarma/g90_panel_estado.py
+
+3) Si el JSONL está en otra ruta, pulsa "Cambiar..."
+
+Notas
+- Las zonas cableadas quedan en ACTIVADA hasta pulsar "Reset visual zonas"
+  porque de momento no se han clasificado eventos de restauración.
+- La ventana no sustituye al listener; solo lee lo que este ya guarda.

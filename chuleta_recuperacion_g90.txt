@@ -1,0 +1,29 @@
+CHULETA RÁPIDA – RECUPERACIÓN G90 TRAS REINICIO
+
+1) Reaplicar la redirección dentro de la alarma por telnet:
+   ~/alarma/redirige_nube_alarma_v5.expect 192.168.11.133 admin admin 47.88.7.61 192.168.11.142 5678
+
+2) Verificar que la regla quedó puesta:
+   telnet 192.168.11.133
+   iptables -t nat -L OUTPUT -n -v --line-numbers
+
+   Debe verse algo como:
+   DNAT tcp -- 0.0.0.0/0 47.88.7.61 tcp dpt:5678 to:192.168.11.142:5678
+
+3) Arrancar el monitor en el PC:
+   source ~/g90env/bin/activate
+   python3 ~/alarma/g90_monitor_hibrido_base_v4.py
+
+4) Probar un evento:
+   - armar total
+   - desarmar
+   - mando
+   - SOS
+
+5) Si vuelven a aparecer eventos, todo está recuperado.
+
+NOTAS
+- Si la alarma se apaga o reinicia, probablemente haya que volver a poner la regla.
+- El problema real no era el monitor, sino perder la redirección cloud dentro de la alarma.
+- La IP del PC usada como nube simulada es 192.168.11.142:5678
+- La IP de la nube original interceptada es 47.88.7.61:5678

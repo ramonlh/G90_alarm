@@ -1,0 +1,25 @@
+Uso rápido
+
+1) Instala expect si no lo tienes:
+   sudo apt update
+   sudo apt install -y expect telnet
+
+2) Da permisos:
+   chmod +x redirige_nube_alarma.expect
+
+3) Ejecútalo:
+   ./redirige_nube_alarma.expect 192.168.11.133 root TU_PASSWORD 47.88.7.61 192.168.11.142 5678
+
+Qué hace exactamente
+- entra por telnet en la alarma
+- comprueba si ya existe la regla
+- si no existe, la añade
+- muestra la tabla NAT OUTPUT para verificarla
+
+La regla que aplica es:
+iptables -t nat -A OUTPUT -p tcp -d 47.88.7.61 --dport 5678 -j DNAT --to-destination 192.168.11.142:5678
+
+Notas
+- cambia root y TU_PASSWORD por los tuyos reales
+- si tu nube real usa otra IP o puerto, cámbialos en los argumentos
+- esta regla suele perderse tras reiniciar la alarma, así que puede haber que reaplicarla

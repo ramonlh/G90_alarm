@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Reiniciar G90
+Comment=Reinicia listener, web y redirección G90
+Exec=pkexec /home/ramon/alarma/g90_reinicia_todo_root.sh
+Icon=system-reboot
+Terminal=false
+Categories=Utility;
+StartupNotify=true
