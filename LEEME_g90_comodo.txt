@@ -1,0 +1,44 @@
+INSTALACIÓN CÓMODA G90 EN EL PC
+
+1) Copia los programas a ~/alarma:
+   cp /mnt/data/g90_panel_web_v2.py ~/alarma/
+   cp /mnt/data/g90_monitor_hibrido_base_v7.py ~/alarma/
+   cp /mnt/data/redirige_nube_alarma_final.expect ~/alarma/
+   cp /mnt/data/g90_reaplica_redireccion.sh ~/alarma/
+   cp /mnt/data/g90_estado.sh ~/alarma/
+
+2) Da permisos:
+   chmod +x ~/alarma/redirige_nube_alarma_final.expect
+   chmod +x ~/alarma/g90_reaplica_redireccion.sh
+   chmod +x ~/alarma/g90_estado.sh
+
+3) Instala las unidades systemd:
+   sudo cp /mnt/data/g90-listener.service /etc/systemd/system/
+   sudo cp /mnt/data/g90-panel-web.service /etc/systemd/system/
+   sudo cp /mnt/data/g90-redireccion.service /etc/systemd/system/
+   sudo cp /mnt/data/g90-redireccion.timer /etc/systemd/system/
+
+4) Recarga y activa todo:
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now g90-listener.service
+   sudo systemctl enable --now g90-panel-web.service
+   sudo systemctl enable --now g90-redireccion.timer
+
+5) Comprueba estado:
+   ~/alarma/g90_estado.sh
+
+6) Ver panel web:
+   En el PC     -> http://127.0.0.1:8088
+   En Android   -> http://192.168.11.78:8088
+
+7) Logs si algo falla:
+   journalctl -u g90-listener.service -f
+   journalctl -u g90-panel-web.service -f
+   journalctl -u g90-redireccion.service -f
+
+NOTAS
+- Esta solución deja tres piezas automáticas:
+  * listener G90
+  * panel web local
+  * timer que reaplica la redirección en la alarma
+- Si cambia la IP del PC, hay que actualizar scripts y servicios que usen 192.168.11.78.

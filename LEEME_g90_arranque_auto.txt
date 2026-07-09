@@ -1,0 +1,35 @@
+Scripts para dejar el sistema G90 arrancando automáticamente al reiniciar el PC.
+
+Archivos:
+- g90_activa_arranque.sh
+- g90_reinicia_todo.sh
+
+Uso recomendado:
+
+1) Copiarlos a ~/alarma:
+   cp /mnt/data/g90_activa_arranque.sh ~/alarma/
+   cp /mnt/data/g90_reinicia_todo.sh ~/alarma/
+
+2) Dar permisos:
+   chmod +x ~/alarma/g90_activa_arranque.sh
+   chmod +x ~/alarma/g90_reinicia_todo.sh
+
+3) Ejecutar una sola vez para dejarlo automático al arranque:
+   ~/alarma/g90_activa_arranque.sh
+
+4) A partir de ahí, tras reiniciar el PC debería arrancar solo:
+   - g90-listener.service
+   - g90-panel-web.service
+   - g90-redireccion.timer
+
+5) Si algún día quieres reiniciar todo manualmente:
+   ~/alarma/g90_reinicia_todo.sh
+
+Comprobación manual:
+   systemctl status g90-listener.service
+   systemctl status g90-panel-web.service
+   systemctl status g90-redireccion.timer
+
+Panel web:
+   http://127.0.0.1:8088
+   http://IP_DEL_PC:8088

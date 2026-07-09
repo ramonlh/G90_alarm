@@ -1,0 +1,40 @@
+Versión con ntfy integrado dentro del listener.
+
+Archivo:
+- g90_monitor_hibrido_base_v8_ntfy.py
+
+Qué hace:
+- sigue escuchando y guardando eventos como antes
+- además, cuando llega un evento importante, lo manda a ntfy desde una cola en segundo plano
+- no bloquea el listener con la petición HTTP
+
+Configuración por variables de entorno:
+- G90_NTFY_ENABLED=1
+- G90_NTFY_TOPIC=tu_topic
+- G90_NTFY_BASE_URL=https://ntfy.sh
+- G90_NTFY_NOTIFY_ARM=0
+- G90_NTFY_NOTIFY_ZONES=1
+- G90_NTFY_NOTIFY_SOS=1
+- G90_NTFY_NOTIFY_DISCONNECT=1
+- G90_NTFY_DISCONNECT_THRESHOLD_SEC=300
+
+Uso manual de prueba:
+  source ~/g90env/bin/activate
+  export G90_NTFY_ENABLED=1
+  export G90_NTFY_TOPIC=TU_TOPIC_REAL
+  python3 ~/alarma/g90_monitor_hibrido_base_v8_ntfy.py
+
+Qué notifica por defecto:
+- SOS
+- SOS desde mando / panel
+- ZONAS CABLEADAS activadas
+- pérdida de tráfico reciente del panel
+
+Armar/desarmar:
+- desactivado por defecto
+- se activa con:
+  export G90_NTFY_NOTIFY_ARM=1
+
+Recomendación:
+- primero pruébalo a mano con dos o tres eventos
+- después, si te convence, se pasa el servicio systemd a esta versión y se añade Environment= o EnvironmentFile=
