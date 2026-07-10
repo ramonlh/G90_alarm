@@ -1,0 +1,117 @@
+#!/usr/bin/expect -f
+# Uso:
+#   ./redirige_nube_alarma_final.expect <HOST> <USER> <PASS> <IP_NUBE_REAL> <IP_PC> [PUERTO]
+#
+# Ejemplo:
+#   ./redirige_nube_alarma_final.expect 192.168.11.133 admin admin 47.88.7.61 192.168.11.78 5678
+#
+# Qué hace:
+# 1) Entra por telnet en la alarma
+# 2) Verifica que hay shell BusyBox
+# 3) Borra todas las reglas DNAT previas para ese destino/puerto
+# 4) Añade una sola regla correcta
+# 5) Muestra la tabla NAT OUTPUT
+# 6) Sale
+
+set timeout 20
+match_max 100000
+
+proc fail {msg} {
+    puts stderr $msg
+    exit 1
+}
+
+proc wait_for_marker {marker} {
+    expect {
+        -re $marker { return }
+        -re {(?i)(login incorrect|incorrect password|authentication failed|denied|failed)} {
+            fail "Autenticación rechazada."
+        }
+        timeout {
+            fail "No apareció la marca esperada: $marker"
+        }
+        eof {
+            fail "La conexión se cerró antes de completar la operación."
+        }
+    }
+}
+
+if {$argc < 5 || $argc > 6} {
+    puts stderr "Uso: $argv0 <HOST> <USER> <PASS> <IP_NUBE_REAL> <IP_PC> [PUERTO]"
+    exit 1
+}
+
+set host [lindex $argv 0]
+set user [lindex $argv 1]
+set pass [lindex $argv 2]
+set cloud_real [lindex $argv 3]
+set ip_pc [lindex $argv 4]
+if {$argc >= 6} {
+    set port [lindex $argv 5]
+} else {
+    set port 5678
+}
+
+set probe_cmd "echo __G90_SHELL_OK__"
+set cleanup_cmd "while iptables -t nat -D OUTPUT -p tcp -d $cloud_real --dport $port -j DNAT >/dev/null 2>&1; do :; done"
+set add_cmd "iptables -t nat -A OUTPUT -p tcp -d $cloud_real --dport $port -j DNAT --to-destination $ip_pc:$port"
+set show_cmd "iptables -t nat -L OUTPUT -n -v --line-numbers"
+
+log_user 1
+puts "Conectando por telnet a $host ..."
+
+spawn telnet $host
+
+expect {
+    -re {(?i)(login|username)} {
+        send -- "$user\r"
+    }
+    timeout {
+        fail "No apareció login/username."
+    }
+    eof {
+        fail "La conexión telnet se cerró antes del login."
+    }
+}
+
+expect {
+    -re {(?i)assword} {
+        send -- "$pass\r"
+    }
+    timeout {
+        fail "No apareció el prompt de contraseña."
+    }
+    eof {
+        fail "La conexión telnet se cerró antes de la contraseña."
+    }
+}
+
+sleep 2
+send -- "\r"
+sleep 1
+
+puts "Comprobando si hay shell ..."
+send -- "$probe_cmd\r"
+wait_for_marker {__G90_SHELL_OK__}
+
+puts "Limpiando reglas previas ..."
+send -- "$cleanup_cmd\r"
+sleep 1
+
+puts "Añadiendo regla correcta ..."
+send -- "$add_cmd\r"
+sleep 1
+
+puts "Mostrando tabla NAT OUTPUT ..."
+send -- "$show_cmd\r"
+sleep 1
+
+expect {
+    -re {Chain OUTPUT} {}
+    timeout {}
+    eof {}
+}
+
+puts "Saliendo ..."
+send -- "exit\r"
+expect eof

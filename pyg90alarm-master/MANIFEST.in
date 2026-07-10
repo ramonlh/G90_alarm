@@ -1,0 +1,15 @@
+include pyproject.toml
+
+# Include the README
+include *.rst
+
+# Include the license file
+include LICENSE
+
+# Include setup.py
+include setup.py
+
+recursive-include src *.py py.typed
+
+exclude requirements_dev.txt
+exclude .releaserc.yaml
