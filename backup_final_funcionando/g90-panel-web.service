@@ -1,0 +1,15 @@
+[Unit]
+Description=Panel web local G90
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ramon
+WorkingDirectory=/home/ramon/alarma
+ExecStart=/home/ramon/g90env/bin/python3 /home/ramon/alarma/g90_panel_web_v2.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Listener G90 en el PC
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ramon
+WorkingDirectory=/home/ramon/alarma
+ExecStart=/home/ramon/g90env/bin/python3 /home/ramon/alarma/g90_monitor_hibrido_base_v7.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

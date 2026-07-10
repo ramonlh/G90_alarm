@@ -1,0 +1,10 @@
+[Unit]
+Description=Reaplica la redireccion cloud G90 dentro de la alarma por telnet
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ramon
+WorkingDirectory=/home/ramon/alarma
+ExecStart=/bin/bash /home/ramon/alarma/g90_reaplica_redireccion.sh

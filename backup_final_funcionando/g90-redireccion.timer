@@ -1,0 +1,12 @@
+[Unit]
+Description=Timer para reaplicar periodicamente la redireccion cloud G90
+
+[Timer]
+OnBootSec=20s
+OnCalendar=*:0/1
+AccuracySec=5s
+Persistent=true
+Unit=g90-redireccion.service
+
+[Install]
+WantedBy=timers.target

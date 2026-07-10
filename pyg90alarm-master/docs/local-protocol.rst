@@ -1,0 +1,219 @@
+Local protocol
+=============================================
+
+.. contents::
+
+Version
+-------
+
+The local protocol version: 1.2 (presumably, as seen in response to ``GETHOSTINFO`` local command).
+
+Description
+-----------
+
+The local protocol is UDP based, using destination port (alarm panel side) of
+``12368``. It has been noticed the vendor provided applications (at least, on iOS)
+uses source port ``45000`` when sending protocol commands to the panel,
+although further experimentation revealed ephemeral ports could be used
+instead.
+
+The protocol commands are text based using JSON encoded payload and ``utf-8``
+encoding. See below for requests and responses wire format.
+
+Security
+--------
+
+.. warning:: The local protocol *does not* provide any security, neither
+   authentication, authorization or encryption.
+
+That translates to:
+
+* Any client on the local network can successfully send the protocol commands
+  to the panel, including arming, disarming, configuring etc.
+* The protocol expects both requests and responses in clear text
+
+You should consider implementing network controls to, at least, limit on what
+clients could interact with the alarm control panel. The implementation might
+consider firewall rules, VLANs and other measures available in the network
+equipment you use.
+
+Request
+-------
+
+The protocol request uses the following format, where ``ISTART`` and ``IEND``
+are always sent as start/end markers, and the request should be terminated with
+binary zero (shown below as ``\0``):
+
+:samp:`ISTART{payload}IEND\\0`
+
+In a generic form the ``payload`` is JSON encoded array contains following elements:
+
+:samp:`[{code},{subcode},[code,[parameters,...]]]``
+
+Typically, both ``code`` and ``subcode`` contain equal values and specify the
+command code being sent.
+
+.. note:: Both elements are encoded as integers not strings!
+
+If the command expects parameters, they are provided as nested array, where
+``code`` is the first element and duplicates ``code`` from the parent.
+Remaining elements in the nested JSON array represent the parameters:
+
+:samp:`ISTART[{code},{subcode}[{code},[parameters,...]]]IEND\\0`
+
+If the command doesn't expect any parameters the request should contain empty
+JSON string ``""`` for the nested array:
+
+:samp:`ISTART[{code},{subcode},""]IEND\\0`
+
+Some examples:
+
+- Get host config:
+
+  :samp:`ISTART[106,106,""]IEND\0`
+
+- Turn on device (relay) with ID 12 and subindex 2 (3rd port of multichannel
+  device):
+
+  :samp:`ISTART[137,137,[137,[12,0,2]]]IEND\0`
+
+
+Response
+--------
+
+Command responses has structure similar to the requests with regards to
+start/end markers, terminator and string encoding. Generic format is:
+
+:samp:`ISTART[{payload}]IEND\\0`
+
+If response doesn't contain ant data it will have only start/end markers and terminator:
+
+:samp:`ISTARTIEND\\0`
+
+In a generic form the ``payload`` is JSON encoded array contains following elements:
+
+:samp:`[{code},[response]]`
+
+The ``code`` duplicates one send in the request and could be used to verify the
+response if for the command sent previously.
+The ``response`` is the JSON array containing command-specific response.
+
+Some examples:
+
+- Host status response (command ``100``):
+
+  :samp:`ISTART[100,[3,"{panel phone number}","TSV018-C3SIA","205","206"]]IEND`
+
+  Where ``TSV018-C3SIA`` is product name, ``205`` is HW version of MCU (main
+  unit) and ``206`` is HW version of Wifi module.
+
+Pagination
+----------
+
+Certain commands operate over list of records and require pagination.
+Such commands require pagination data to be sent in the request, indicating
+range of records requested - :samp:`[{start record},{end record}]`:
+
+:samp:`ISTART[{code},{subcode},[{code},[{start record},{end record}]]]IEND\\0`
+
+Both ``start record`` and ``end record`` are one-based and indicate the
+inclusive range of records.
+
+Response to paginated commands comes as JSON array with pagination header as the first element:
+
+:samp:`ISTART[{code},[[{total records},{start record},{count}],[{response element,...}]]]IEND\\0`
+
+Same as for regular commands, the ``code`` duplicates one sent in the request.
+The pagination header being first element in the payload array has following
+fields:
+
+- ``total records`` total number of records available (one-based)
+- ``start record`` the index of the starting record (one-based)
+- ``count`` number of records returned
+
+The protocol seems correctly handle the scenario requesting the number of
+records larger then those available (difference between ``end record`` and
+``start record``), although only if ``start record`` is within available
+records - if ``start record`` specifies one outside of the range available the
+device will return empty response.
+
+
+Notification protocol
+---------------------
+
+The alarm panel sends notifications and alerts on various events. The
+notifications are send unconditionally, that is you cannot disable them, while
+alerts are only sent if enabled in the device.
+
+To receive the notifications from the device you need to follow the steps
+outlined in :ref:`Local notifications`.
+
+The device uses UDP protocol and ``12901`` target port, each notification is
+sent in separate packets having the following structure:
+
+:samp:`[{message ID},[{message code},[data]]]\\0`
+
+All messages are terminated with binary zero (shown below as ``\0``), and text
+uses ``utf-8`` encoding.
+
+Data varies across different notification and alert types, see
+`src/pyg90alarm/local/notifications.py <../../src/pyg90alarm/local/notifications.py>`_.
+
+System commands
+---------------
+
+In addition to regular commands, the local protocol also supports system commands that perform device maintenance operations. Unlike regular commands, system commands do not expect a response from the device and are invoked using a special wire format based on AT commands.
+
+.. note:: System commands are not exposed through regular command interface but have their own dedicated methods in the ``G90Alarm`` class.
+
+Wire Format
+^^^^^^^^^^^
+
+System commands use a different wire format compared to regular commands:
+
+:samp:`ISTART[0,100,"AT^IWT={command code}{command data},IWT"]IEND\\0`
+
+The command is wrapped in an AT command format (``AT^IWT=...``) within a regular command structure with fixed codes ``0`` and ``100``.
+
+Available System Commands
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following system commands are available:
+
+- MCU Reboot (code ``1123``)
+  Reboots the Main Control Unit (MCU) of the alarm panel.
+
+  **Wire format example:**
+
+  :samp:`ISTART[0,100,"AT^IWT=1123,IWT"]IEND\\0`
+
+- GSM Reboot (code ``1129``)
+  Reboots the GSM module of the alarm panel.
+
+  **Wire format example:**
+
+  :samp:`ISTART[0,100,"AT^IWT=1129,IWT"]IEND\\0`
+
+- WiFi Reboot (code ``1006``)
+  Reboots the WiFi module of the alarm panel.
+
+  **Wire format example:**
+
+  :samp:`ISTART[0,100,"AT^IWT=1006,IWT"]IEND\\0`
+
+- Set Server Address (configuration command ``1`` with sub-command ``78``)
+  Configures the cloud server address that the alarm panel connects to.
+  The command requires three parameters separated by ``&``: cloud primary host,
+  cloud secondary host, and cloud port number.
+
+  There is no indication the panel will use DNS resolution, so both addresses should be IP ones. Also, it is unclear what 2nd address is used for - experiments revealed the panel always connects to the 1st one.
+
+  **Wire format example:**
+
+  :samp:`ISTART[0,100,"AT^IWT=1,78=192.168.1.100&192.168.1.100&5678,IWT"]IEND\\0`
+
+  Where:
+
+  - ``192.168.1.100`` is the primary IP address of the cloud server
+  - ``192.168.1.100`` is the secondary IP address of the cloud server (see above note)
+  - ``5678`` is the port number the cloud server listens on
