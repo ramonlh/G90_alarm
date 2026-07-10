@@ -1,0 +1,73 @@
+#!/usr/bin/expect -f
+
+set timeout 10
+
+set alarma_ip "192.168.1.149"
+set usuario "admin"
+set password "admin"
+
+if {$argc != 1} {
+    puts "Uso:"
+    puts "  g90_serial_control.expect arm_total"
+    puts "  g90_serial_control.expect arm_parcial"
+    puts "  g90_serial_control.expect disarm"
+    exit 1
+}
+
+set cmd [lindex $argv 0]
+
+if {$cmd == "arm_total"} {
+    set orden {printf '\252\252\321\322\004\001\014\001\001\355' > /dev/ttyS0}
+} elseif {$cmd == "arm_parcial"} {
+    set orden {printf '\252\252\321\322\004\001\014\001\002\354' > /dev/ttyS0}
+} elseif {$cmd == "disarm"} {
+    set orden {printf '\252\252\321\322\003\001\015\000\357' > /dev/ttyS0}
+} else {
+    puts "Comando no reconocido: $cmd"
+    puts "Comandos válidos: arm_total, arm_parcial, disarm"
+    exit 2
+}
+
+spawn telnet $alarma_ip
+
+expect {
+    "login:" {
+        send "$usuario\r"
+    }
+    timeout {
+        puts "ERROR: no apareció login"
+        exit 3
+    }
+}
+
+expect {
+    "Password:" {
+        send "$password\r"
+    }
+    timeout {
+        puts "ERROR: no apareció Password"
+        exit 4
+    }
+}
+
+expect {
+    "#" {
+        send "$orden\r"
+    }
+    timeout {
+        puts "ERROR: no apareció shell"
+        exit 5
+    }
+}
+
+expect {
+    "#" {
+        send "exit\r"
+        puts "OK: comando enviado: $cmd"
+        exit 0
+    }
+    timeout {
+        puts "AVISO: comando enviado, pero no volvió el prompt"
+        exit 0
+    }
+}

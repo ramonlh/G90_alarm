@@ -9,8 +9,8 @@ from pyg90alarm import G90Alarm
 from pyg90alarm.const import G90ArmDisarmTypes
 from pyg90alarm.local.alert_config import G90AlertConfigFlags
 
-PANEL_IP = "192.168.11.133"
-PC_IP = "192.168.11.128"
+PANEL_IP = "192.168.1.149"
+PC_IP = "192.168.1.78"
 PORT = 5678
 EVENTS_FILE = "g90_eventos_base.jsonl"
 
