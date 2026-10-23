@@ -3,7 +3,7 @@
 #   ./redirige_nube_alarma_final.expect <HOST> <USER> <PASS> <IP_NUBE_REAL> <IP_PC> [PUERTO]
 #
 # Ejemplo:
-#   ./redirige_nube_alarma_final.expect 192.168.11.133 admin admin 47.88.7.61 192.168.11.78 5678
+#   ./redirige_nube_alarma_final.expect 192.168.11.133 USUARIO PASSWORD 47.88.7.61 192.168.11.78 5678
 #
 # Qué hace:
 # 1) Entra por telnet en la alarma

@@ -2,8 +2,11 @@
 set -euo pipefail
 
 ALARMA_IP="192.168.1.149"
-ALARMA_USER="admin"
-ALARMA_PASS="admin"
+# Credenciales en g90.conf, junto a este script (no se sube a GitHub; ver g90.conf.example)
+CONF="$(dirname "$(readlink -f "$0")")/g90.conf"
+[ -f "$CONF" ] && . "$CONF"
+ALARMA_USER="${ALARMA_USER:?Define ALARMA_USER en $CONF}"
+ALARMA_PASS="${ALARMA_PASS:?Define ALARMA_PASS en $CONF}"
 NUBE_REAL_IP="47.88.7.61"
 PC_IP="192.168.1.78"
 PUERTO="5678"

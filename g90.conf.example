@@ -1,0 +1,4 @@
+# Copia este fichero como g90.conf (está en .gitignore) y pon la contraseña real de la central.
+# Cambia la contraseña por defecto admin/admin en la propia alarma.
+ALARMA_USER="admin"
+ALARMA_PASS="CAMBIA_ESTO"

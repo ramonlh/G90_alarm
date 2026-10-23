@@ -3,8 +3,23 @@
 set timeout 10
 
 set alarma_ip "192.168.1.149"
-set usuario "admin"
-set password "admin"
+# Credenciales en g90.conf, junto a este script (no se sube a GitHub; ver g90.conf.example)
+set conf [file join [file dirname [file normalize [info script]]] g90.conf]
+if {![file exists $conf]} {
+    puts "ERROR: falta $conf (copia g90.conf.example)"
+    exit 1
+}
+set fh [open $conf]
+foreach line [split [read $fh] "\n"] {
+    if {[regexp {^\s*(ALARMA_USER|ALARMA_PASS)="?([^"]*)"?\s*$} $line -> k v]} { set cfg($k) $v }
+}
+close $fh
+if {![info exists cfg(ALARMA_USER)] || ![info exists cfg(ALARMA_PASS)]} {
+    puts "ERROR: define ALARMA_USER y ALARMA_PASS en $conf"
+    exit 1
+}
+set usuario $cfg(ALARMA_USER)
+set password $cfg(ALARMA_PASS)
 
 if {$argc != 1} {
     puts "Uso:"

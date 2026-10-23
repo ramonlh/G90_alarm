@@ -1,7 +1,7 @@
 CHULETA RÁPIDA – RECUPERACIÓN G90 TRAS REINICIO
 
 1) Reaplicar la redirección dentro de la alarma por telnet:
-   ~/alarma/redirige_nube_alarma_v5.expect 192.168.11.133 admin admin 47.88.7.61 192.168.11.142 5678
+   ~/alarma/redirige_nube_alarma_v5.expect 192.168.11.133 USUARIO PASSWORD 47.88.7.61 192.168.11.142 5678
 
 2) Verificar que la regla quedó puesta:
    telnet 192.168.11.133
